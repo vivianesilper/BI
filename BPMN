@@ -1,2 +1,13 @@
+Na prática, um Pipeline de Dados funciona assim:
 
-
+CSV — fonte dos dados brutos
+Python + PyCharm — limpeza, cálculos estatísticos e matemáticos
+SQL Server + SSMS — armazenamento estruturado
+DataGrip — integração e consultas SQL
+Power BI — visualização e tomada de decisão
+CSV — fonte dos dados brutos
+Python + PyCharm — limpeza, cálculos estatísticos e matemáticos
+SQL Server + SSMS — armazenamento estruturado
+DataGrip — integração e consultas SQL
+Power BI — visualização e tomada de decisão
+"Nota: o DataGrip foi omitido da representação visual por limitação de espaço, mas integra o pipeline entre o SQL Server e o Power BI."
