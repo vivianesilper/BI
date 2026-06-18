@@ -1,13 +1,111 @@
-Na prática, um Pipeline de Dados funciona assim:
+# Dicionário de dados — Data Analytics Pipeline
 
-CSV — fonte dos dados brutos
-Python + PyCharm — limpeza, cálculos estatísticos e matemáticos
-SQL Server + SSMS — armazenamento estruturado
-DataGrip — integração e consultas SQL
-Power BI — visualização e tomada de decisão
-CSV — fonte dos dados brutos
-Python + PyCharm — limpeza, cálculos estatísticos e matemáticos
-SQL Server + SSMS — armazenamento estruturado
-DataGrip — integração e consultas SQL
-Power BI — visualização e tomada de decisão
-"Nota: o DataGrip foi omitido da representação visual por limitação de espaço, mas integra o pipeline entre o SQL Server e o Power BI."
+
+
+> Documento de referência para todos os campos que circulam no pipeline:
+> CSV → Python → SQL Server → DataGrip → Power BI.
+>
+> **Versão:** 1.0  
+> **Atualizado em:** 2024-06  
+> **Responsável:** _(seu nome)_
+
+---
+
+## Sumário
+
+1. [Fonte — CSV bruto](#1-fonte--csv-bruto)
+2. [Após tratamento — Python](#2-após-tratamento--python)
+3. [Armazenamento — SQL Server](#3-armazenamento--sql-server)
+4. [Métricas calculadas — Power BI](#4-métricas-calculadas--power-bi)
+5. [Regras de negócio](#5-regras-de-negócio)
+6. [Histórico de alterações](#6-histórico-de-alterações)
+
+---
+
+## 1. Fonte — CSV bruto
+
+Arquivo original antes de qualquer transformação.
+
+| Campo | Tipo original | Descrição | Exemplo | Observações |
+|---|---|---|---|---|
+| `campo_1` | `string` | _(descreva aqui)_ | `"exemplo"` | _(preencher)_ |
+| `campo_2` | `string` | _(descreva aqui)_ | `"2024-01-15"` | _(preencher)_ |
+| `campo_3` | `string` | _(descreva aqui)_ | `"1250.50"` | _(preencher)_ |
+
+> Substitua os campos acima pelas colunas reais do seu CSV.
+
+---
+
+## 2. Após tratamento — Python
+
+Campos após limpeza, tipagem e cálculos no PyCharm.
+
+| Campo | Tipo Python | Descrição | Exemplo | Transformação aplicada |
+|---|---|---|---|---|
+| `dt_referencia` | `datetime` | Data de referência do registro | `2024-01-15` | Conversão de string para `datetime` |
+| `vl_bruto` | `float` | Valor bruto original | `1250.50` | Remoção de caracteres especiais |
+| `vl_liquido` | `float` | Valor após deduções | `1062.93` | Calculado: `vl_bruto * (1 - taxa)` |
+| `tx_desconto` | `float` | Percentual de desconto aplicado | `0.15` | Normalizado para escala 0–1 |
+| `flag_valido` | `bool` | Registro passou na validação | `True` | Regra: sem nulos em campos obrigatórios |
+
+---
+
+## 3. Armazenamento — SQL Server
+
+Estrutura das tabelas no banco. Gerenciado via SSMS e consultado pelo DataGrip.
+
+### Tabela `dbo.tb_principal`
+
+| Coluna | Tipo SQL | Nulo? | Chave | Descrição | Exemplo |
+|---|---|---|---|---|---|
+| `id` | `INT IDENTITY` | Não | PK | Identificador único | `1` |
+| `dt_referencia` | `DATE` | Não | — | Data do registro | `2024-01-15` |
+| `vl_bruto` | `DECIMAL(12,2)` | Não | — | Valor bruto | `1250.50` |
+| `vl_liquido` | `DECIMAL(12,2)` | Não | — | Valor líquido calculado | `1062.93` |
+| `tx_desconto` | `DECIMAL(5,4)` | Sim | — | Percentual de desconto | `0.1500` |
+| `flag_valido` | `BIT` | Não | — | Indica registro válido | `1` |
+| `dt_carga` | `DATETIME` | Não | — | Timestamp da ingestão | `2024-06-01 14:32:00` |
+
+### Tabela `dbo.tb_dimensao` _(exemplo — adicione conforme necessário)_
+
+| Coluna | Tipo SQL | Nulo? | Chave | Descrição | Exemplo |
+|---|---|---|---|---|---|
+| `id` | `INT IDENTITY` | Não | PK | Identificador | `1` |
+| `ds_categoria` | `VARCHAR(100)` | Não | — | Descrição da categoria | `"Vendas"` |
+
+---
+
+## 4. Métricas calculadas — Power BI
+
+Medidas DAX criadas no Power BI para visualização e tomada de decisão.
+
+| Métrica | Tipo | Descrição | Fórmula DAX (simplificada) |
+|---|---|---|---|
+| `Total Bruto` | `CURRENCY` | Soma dos valores brutos | `SUM(tb_principal[vl_bruto])` |
+| `Total Líquido` | `CURRENCY` | Soma dos valores líquidos | `SUM(tb_principal[vl_liquido])` |
+| `Desconto Médio` | `%` | Média dos descontos aplicados | `AVERAGE(tb_principal[tx_desconto])` |
+| `% Registros Válidos` | `%` | Proporção de registros válidos | `DIVIDE(COUNTROWS(FILTER(..., flag_valido=1)), COUNTROWS(...))` |
+
+---
+
+## 5. Regras de negócio
+
+| Regra | Descrição | Onde se aplica |
+|---|---|---|
+| RN-01 | Registros com `vl_bruto <= 0` são descartados | Python — limpeza |
+| RN-02 | `dt_referencia` não pode ser futura | Python — validação |
+| RN-03 | `tx_desconto` deve estar entre 0 e 1 | Python — normalização |
+| RN-04 | Carga no SQL Server só ocorre com `flag_valido = True` | Python → SQL Server |
+| RN-05 | Relatórios Power BI filtram apenas registros do mês corrente por padrão | Power BI |
+
+---
+
+## 6. Histórico de alterações
+
+| Versão | Data | Autor | Descrição |
+|---|---|---|---|
+| 1.0 | 2024-06 | _(seu nome)_ | Criação inicial do dicionário |
+
+---
+
+*Dúvidas ou atualizações: abrir uma issue no repositório com a label `docs`.*
